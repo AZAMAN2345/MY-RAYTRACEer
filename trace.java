@@ -1,8 +1,11 @@
+ 
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.File;
 public class trace{
+
+
 
 public class SimpleCamera{
 int width; // camera width
@@ -20,7 +23,7 @@ vec3 vertical;          // Viewport vertical vector
 vec3 lowerLeft;         // Lower-left corner of viewport
 vec3 pixelDeltaU;       // Pixel horizontal step
 vec3 pixelDeltaV; 
-SimpleCamera(int width, int height, vec3 position, vec3 lookat, vec3 up, double fov){
+public SimpleCamera(int width, int height, vec3 position, vec3 lookat, vec3 up, double fov){
 
     this.width = width;
     this.height = height;
@@ -55,10 +58,17 @@ private void initiailize(){
             // Calculate pixel step vectors
             pixelDeltaU = horizontal.mul(1.0 / width);
             pixelDeltaV = vertical.mul(1.0 / height);
-}
-}
+    }
+              
 
-}
+ public Ray getRay(double x, double y) {
+            vec3 pixelCenter = lowerLeft
+                .add(pixelDeltaU.mul(x))
+                .add(pixelDeltaV.mul(height - y - 1));  // Flip Y for image coordinates
+            
+            return new Ray(position, pixelCenter.sub(position));}
+
+
 static class vec3{
 
 double x, y, z;
@@ -104,36 +114,43 @@ vec3 add(vec3 v) {
             }
         vec3 negate(vec3 v){
             return new vec3(-x, -y, -z);
-        }
+         }
  vec3 cross(vec3 v) {
             return new vec3(
                 y * v.z - z * v.y,
                 z * v.x - x * v.z,
                 x * v.y - y * v.x
             );
-}
-class Ray{
+        
+        }
+    
+            }
+
+
+static class Ray{
  vec3 origin;
  vec3 direction;
 
- Ray(vec3 distance, vec3 origin ){
+ public Ray(vec3 distance, vec3 origin ){
  this.origin = origin;
 this.direction = direction.normalize();
  }
 
  }
 
-class Sphere{
+static class Sphere{
 vec3 center;
 double radius;
 vec3 color;
-Sphere(vec3 center, int radius, vec3 color){
+
+public Sphere(vec3 center, double radius, vec3 color){
 this.center = center;
 this.radius = radius;
 this.color = color;
 
 
-}
+                }
+
   Double intersect(Ray ray) {
     //sphere to intersect movement of light
             vec3 oc = ray.origin.sub(center);
@@ -148,37 +165,39 @@ this.color = color;
             return t > 0.001 ? t : null;
         }
  }
-}
+
 
 public static void main(String args[]){
  //camera
 int width = 800;
  int height = 800;
  int fov = 120;
+ double minDist = 4;
+
+ Ray ray = new Ray(new vec3(0,0,1), new vec3(0,0,0));
   BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
  
   SimpleCamera camera;
   camera = new SimpleCamera(width, height,new vec3(0,0,0), new vec3(0,1,0), new vec3(0,0,-1), fov);
   
 //scene objects
-  Sphere sphere[]={
- new Sphere(new Vec3(0, 0, -5), 1.0, new Vec3(0.8, 0.2, 0.2)),  
-            new Sphere(new Vec3(2, 0, -5), 0.5, new Vec3(0.2, 0.8, 0.2)),   
-            new Sphere(new Vec3(-2, 0, -5), 0.7, new Vec3(0.2, 0.2, 0.8))    
+Sphere sphere[]={new Sphere(new vec3(0, 0, -5), 1.0, new vec3(0.8, 0.2, 0.2)),  
+            new Sphere(new vec3(2, 0, -5), 0.5, new vec3(0.2, 0.8, 0.2)),   
+            new Sphere(new vec3(-2, 0, -5), 0.7,  new vec3(0.2, 0.2, 0.8))    
 
   };
 
   //light Scene
-          Vec3 light = new Vec3(-5, 5, 0);
+          vec3 light = new vec3(-5, 5, 0);
         //Render loop (if that makes sense)
           for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 // Generate ray through current pixel
-                Ray ray = camera.getRay(x, y);
+                Ray Ray = camera.getRay(x, y);
                 
                 // Find closest intersection
-                double minDist = Double.MAX_VALUE;
-                Vec3 color = new Vec3(0, 0, 0); // Background color
+                 minDist = Double.MAX_VALUE;
+                vec3 color = new vec3(0, 0, 0); // Background color
 
 }
           }
@@ -188,16 +207,16 @@ int width = 800;
                         minDist = t;
                         
                         // Calculate hit point
-                        Vec3 hitPoint = ray.origin.add(ray.direction.mul(t));
-                        Vec3 normal = hitPoint.sub(sphere.center).normalize();
+                        vec3 hitPoint = ray.origin.add(ray.direction.mul(t));
+                        vec3 normal = hitPoint.sub(sphere.center).normalize();
                         
                         // Shadow check (with offset to prevent self-intersection)
-                        Vec3 toLight = light.sub(hitPoint).normalize();
-                        Vec3 shadowOrigin = hitPoint.add(normal.mul(0.001));
+                        vec3 toLight = light.sub(hitPoint).normalize();
+                        vec3 shadowOrigin = hitPoint.add(normal.mul(0.001));
                         Ray shadowRay = new Ray(shadowOrigin, toLight);
                         boolean inShadow = false;
                         
-                        for (Sphere s : spheres) {
+                        for (Sphere s : sphere) {
                             Double st = s.intersect(shadowRay);
                             if (st != null) {
                                 inShadow = true;
@@ -206,17 +225,11 @@ int width = 800;
                         }
                      }
     }
-    // Convert to RGB and set pixel
-                int r = (int) (255 * Math.min(1, color.x));
-                int g = (int) (255 * Math.min(1, color.y));
-                int b = (int) (255 * Math.min(1, color.z));
-                int rgb = (r << 16) | (g << 8) | b;
-                image.setRGB(x, y, rgb);
+   
 
         // Save image
         ImageIO.write(image, "png", new File("render.png"));
         System.out.println("Rendering complete!");
 
 }
-
-
+}}
