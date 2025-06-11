@@ -1,9 +1,10 @@
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
-class trace{
+import java.io.File;
+public class trace{
 
-class SimpleCamera{
+public class SimpleCamera{
 int width; // camera width
 int height; // camera height
 double fov; // camera fov
@@ -13,13 +14,13 @@ vec3 up;
 vec3 lookat;// direction to which camera should look at
 
 
-   vec3 u, v, w;          // Camera basis vectors
-        vec3 horizontal;        // Viewport horizontal vector
-        vec3 vertical;          // Viewport vertical vector
-        vec3 lowerLeft;         // Lower-left corner of viewport
-        vec3 pixelDeltaU;       // Pixel horizontal step
-        vec3 pixelDeltaV; 
-SimpleCamera(int width, int height,  vec3 lookat, vec3 up, double fov){
+vec3 u, v, w;          // Camera basis vectors
+vec3 horizontal;        // Viewport horizontal vector
+vec3 vertical;          // Viewport vertical vector
+vec3 lowerLeft;         // Lower-left corner of viewport
+vec3 pixelDeltaU;       // Pixel horizontal step
+vec3 pixelDeltaV; 
+SimpleCamera(int width, int height, vec3 position, vec3 lookat, vec3 up, double fov){
 
     this.width = width;
     this.height = height;
@@ -54,15 +55,7 @@ private void initiailize(){
             // Calculate pixel step vectors
             pixelDeltaU = horizontal.mul(1.0 / width);
             pixelDeltaV = vertical.mul(1.0 / height);
-
-
-
-
 }
-
-
-
-
 }
 
 }
@@ -153,22 +146,77 @@ this.color = color;
 
             double t = (-b - Math.sqrt(discriminant)) / (2*a);
             return t > 0.001 ? t : null;
-
-
-
-}
-
-
+        }
  }
 }
 
-public static void main(String args[])throws Exception{
- int width = 800;
+public static void main(String args[]){
+ //camera
+int width = 800;
  int height = 800;
+ int fov = 120;
+  BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
  
+  SimpleCamera camera;
+  camera = new SimpleCamera(width, height,new vec3(0,0,0), new vec3(0,1,0), new vec3(0,0,-1), fov);
+  
+//scene objects
+  Sphere sphere[]={
+ new Sphere(new Vec3(0, 0, -5), 1.0, new Vec3(0.8, 0.2, 0.2)),  
+            new Sphere(new Vec3(2, 0, -5), 0.5, new Vec3(0.2, 0.8, 0.2)),   
+            new Sphere(new Vec3(-2, 0, -5), 0.7, new Vec3(0.2, 0.2, 0.8))    
 
+  };
 
-    
+  //light Scene
+          Vec3 light = new Vec3(-5, 5, 0);
+        //Render loop (if that makes sense)
+          for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Generate ray through current pixel
+                Ray ray = camera.getRay(x, y);
+                
+                // Find closest intersection
+                double minDist = Double.MAX_VALUE;
+                Vec3 color = new Vec3(0, 0, 0); // Background color
+
+}
+          }
+             for (Sphere spheres : sphere) {
+                    Double t = sphere.intersect(ray);
+                    if (t != null && t < minDist) {
+                        minDist = t;
+                        
+                        // Calculate hit point
+                        Vec3 hitPoint = ray.origin.add(ray.direction.mul(t));
+                        Vec3 normal = hitPoint.sub(sphere.center).normalize();
+                        
+                        // Shadow check (with offset to prevent self-intersection)
+                        Vec3 toLight = light.sub(hitPoint).normalize();
+                        Vec3 shadowOrigin = hitPoint.add(normal.mul(0.001));
+                        Ray shadowRay = new Ray(shadowOrigin, toLight);
+                        boolean inShadow = false;
+                        
+                        for (Sphere s : spheres) {
+                            Double st = s.intersect(shadowRay);
+                            if (st != null) {
+                                inShadow = true;
+                                break;
+                            }
+                        }
+                     }
+    }
+    // Convert to RGB and set pixel
+                int r = (int) (255 * Math.min(1, color.x));
+                int g = (int) (255 * Math.min(1, color.y));
+                int b = (int) (255 * Math.min(1, color.z));
+                int rgb = (r << 16) | (g << 8) | b;
+                image.setRGB(x, y, rgb);
+
+        // Save image
+        ImageIO.write(image, "png", new File("render.png"));
+        System.out.println("Rendering complete!");
+
 }
 
 
