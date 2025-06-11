@@ -1,4 +1,4 @@
- 
+  
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -7,7 +7,7 @@ public class trace{
 
 
 
-public class SimpleCamera{
+static class SimpleCamera{
 int width; // camera width
 int height; // camera height
 double fov; // camera fov
@@ -167,7 +167,7 @@ this.color = color;
  }
 
 
-public static void main(String args[]){
+public static void main(String args[])throws Exception{
  //camera
 int width = 800;
  int height = 800;
@@ -177,8 +177,7 @@ int width = 800;
  Ray ray = new Ray(new vec3(0,0,1), new vec3(0,0,0));
   BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
  
-  SimpleCamera camera;
-  camera = new SimpleCamera(width, height,new vec3(0,0,0), new vec3(0,1,0), new vec3(0,0,-1), fov);
+  SimpleCamera camera = new SimpleCamera(width, height,new vec3(0,0,0), new vec3(0,1,0), new vec3(0,0,-1), fov);
   
 //scene objects
 Sphere sphere[]={new Sphere(new vec3(0, 0, -5), 1.0, new vec3(0.8, 0.2, 0.2)),  
@@ -202,13 +201,13 @@ Sphere sphere[]={new Sphere(new vec3(0, 0, -5), 1.0, new vec3(0.8, 0.2, 0.2)),
 }
           }
              for (Sphere spheres : sphere) {
-                    Double t = sphere.intersect(ray);
+                    Double t = spheres.intersect(ray);
                     if (t != null && t < minDist) {
                         minDist = t;
                         
                         // Calculate hit point
                         vec3 hitPoint = ray.origin.add(ray.direction.mul(t));
-                        vec3 normal = hitPoint.sub(sphere.center).normalize();
+                        vec3 normal = hitPoint.sub(spheres.center).normalize();
                         
                         // Shadow check (with offset to prevent self-intersection)
                         vec3 toLight = light.sub(hitPoint).normalize();
